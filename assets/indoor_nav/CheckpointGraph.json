@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {"id": "C0", "name": "CentralCore_B419_A420_A419"},
+    {"id": "C1", "name": "LiftLobby"},
+    {"id": "A1", "name": "A401_A403"},
+    {"id": "A2", "name": "A404_A406"},
+    {"id": "A3", "name": "A407_A409"},
+    {"id": "A4", "name": "A410_A412"},
+    {"id": "A5", "name": "AEnd_Services"},
+    {"id": "A6", "name": "A413_A415"},
+    {"id": "A7", "name": "A416_A418"},
+    {"id": "B1", "name": "B401_B403"},
+    {"id": "B2", "name": "B404_B406"},
+    {"id": "B3", "name": "B407_B409"},
+    {"id": "B4", "name": "B410_B412"},
+    {"id": "B5", "name": "BEnd_Services"},
+    {"id": "B6", "name": "B413_B415"},
+    {"id": "B7", "name": "B416_B418"}
+  ],
+  "edges": [
+    {"from": "C1", "to": "C0", "distance": 1.0},
+    {"from": "C1", "to": "A1", "distance": 1.0},
+    {"from": "C0", "to": "A1", "distance": 1.0},
+    {"from": "A1", "to": "A2", "distance": 1.0},
+    {"from": "A1", "to": "A7", "distance": 1.0},
+    {"from": "A7", "to": "A2", "distance": 1.0},
+    {"from": "A2", "to": "A3", "distance": 1.0},
+    {"from": "A3", "to": "A4", "distance": 1.0},
+    {"from": "A3", "to": "A6", "distance": 1.0},
+    {"from": "A6", "to": "A4", "distance": 1.0},
+    {"from": "A4", "to": "A5", "distance": 1.0},
+    {"from": "C0", "to": "B1", "distance": 1.0},
+    {"from": "B1", "to": "B2", "distance": 1.0},
+    {"from": "B1", "to": "B7", "distance": 1.0},
+    {"from": "B7", "to": "B2", "distance": 1.0},
+    {"from": "B2", "to": "B3", "distance": 1.0},
+    {"from": "B3", "to": "B4", "distance": 1.0},
+    {"from": "B3", "to": "B6", "distance": 1.0},
+    {"from": "B6", "to": "B4", "distance": 1.0},
+    {"from": "B4", "to": "B5", "distance": 1.0}
+  ]
+}

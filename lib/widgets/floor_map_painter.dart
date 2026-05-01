@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 
-import '../models/graph.dart';
+import '../map_state.dart';
 
 const Map<String, Offset> kCheckpointPositions = {
-  'C0': Offset(0.461, 0.448),
-  'C1': Offset(0.575, 0.188),
-  'A1': Offset(0.641, 0.461),
-  'A2': Offset(0.733, 0.461),
-  'A3': Offset(0.800, 0.461),
-  'A4': Offset(0.895, 0.461),
-  'A5': Offset(0.925, 0.688),
-  'A6': Offset(0.854, 0.630),
-  'A7': Offset(0.689, 0.630),
-  'B1': Offset(0.362, 0.461),
-  'B2': Offset(0.268, 0.461),
-  'B3': Offset(0.201, 0.461),
-  'B4': Offset(0.110, 0.461),
-  'B5': Offset(0.073, 0.696),
-  'B6': Offset(0.156, 0.630),
-  'B7': Offset(0.316, 0.630),
+  'C0': Offset(0.5072, 0.3869),
+  'C1': Offset(0.5696, 0.1519),
+  'A1': Offset(0.6394, 0.3767),
+  'A2': Offset(0.7240, 0.3767),
+  'A3': Offset(0.7946, 0.3767),
+  'A4': Offset(0.8686, 0.3767),
+  'A5': Offset(0.9050, 0.7200),
+  'A6': Offset(0.8297, 0.5056),
+  'A7': Offset(0.6833, 0.5059),
+  'B1': Offset(0.3758, 0.3771),
+  'B2': Offset(0.2953, 0.3769),
+  'B3': Offset(0.2235, 0.3769),
+  'B4': Offset(0.1350, 0.3769),
+  'B5': Offset(0.0908, 0.7203),
+  'B6': Offset(0.1778, 0.5055),
+  'B7': Offset(0.3330, 0.5053),
 };
 
 Offset checkpointOffset(String checkpointId, Size size) {

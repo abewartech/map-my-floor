@@ -3,9 +3,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
     
     <application
-        android:label="localization"
+        android:label="MapMyFloor"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

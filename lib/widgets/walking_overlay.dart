@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 class WalkingOverlay extends StatelessWidget {
   final bool visible;
@@ -22,71 +21,70 @@ class WalkingOverlay extends StatelessWidget {
       child: AnimatedOpacity(
         opacity: visible ? 1 : 0,
         duration: Duration(milliseconds: visible ? 400 : 300),
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.85),
-          width: double.infinity,
-          height: double.infinity,
-          child: SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: Lottie.network(
-                          // TODO: Replace with a bundled asset for production/offline use.
-                          'https://assets9.lottiefiles.com/packages/lf20_gkgqj2yq.json',
-                          repeat: true,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onDismiss,
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.85),
+            width: double.infinity,
+            height: double.infinity,
+            child: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: const Icon(
                               Icons.directions_walk,
                               size: 120,
                               color: Colors.white,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Heading to $destinationName',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        finalInstruction,
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      OutlinedButton.icon(
-                        key: const ValueKey('dismissWalkingOverlay'),
-                        onPressed: onDismiss,
-                        icon: const Icon(Icons.close),
-                        label: const Text('Dismiss'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 22,
-                            vertical: 12,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 24),
+                        Text(
+                          'Heading to $destinationName',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          finalInstruction,
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+                        Text(
+                          'Tap anywhere to continue',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

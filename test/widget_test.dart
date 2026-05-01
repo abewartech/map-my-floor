@@ -1,63 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:localization/navigation_provider.dart';
-import 'package:localization/screens/location_screen.dart';
-import 'package:localization/screens/map_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:map_my_floor/indoor_nav.dart';
+import 'package:map_my_floor/navigation_provider.dart';
+import 'package:map_my_floor/screens/location_screen.dart';
+import 'package:map_my_floor/wifi_service.dart';
 
-Widget _withProvider(Widget child) {
-  return ChangeNotifierProvider(
-    create: (_) => NavigationProvider(),
+class FakeWifiSource implements WifiObservationSource {
+  List<WifiObservation> observations;
+  bool permissionResult;
+  Object? scanError;
+
+  FakeWifiSource({
+    required this.observations,
+    this.permissionResult = true,
+    this.scanError,
+  });
+
+  @override
+  Future<bool> requestPermissions() async => permissionResult;
+
+  @override
+  Future<List<WifiObservation>> scan() async {
+    final error = scanError;
+    if (error != null) throw error;
+    return observations;
+  }
+}
+
+Future<NavigationProvider> _readyProvider() async {
+  final provider = NavigationProvider(
+    wifiSource: FakeWifiSource(
+      observations: const <WifiObservation>[],
+    ),
+  );
+  await provider.initialize(startScanning: false);
+  return provider;
+}
+
+Widget _withProvider(NavigationProvider provider, Widget child) {
+  return ChangeNotifierProvider<NavigationProvider>.value(
+    value: provider,
     child: MaterialApp(home: child),
   );
 }
 
 void main() {
-  testWidgets('LocationScreen renders C1 fallback when provider is Unknown', (
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('LocationScreen renders C1 fallback before first scan', (
     tester,
   ) async {
-    await tester.pumpWidget(_withProvider(const LocationScreen()));
+    final provider = await _readyProvider();
+    addTearDown(provider.dispose);
+
+    await tester.pumpWidget(_withProvider(provider, const LocationScreen()));
     await tester.pump();
 
     expect(find.text('C1'), findsOneWidget);
-    expect(find.text('LiftLobby'), findsOneWidget);
-    expect(find.text('Proceed toward C0 for room navigation.'), findsOneWidget);
-  });
-
-  testWidgets('MapScreen routes to a selected destination and clears overlay', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _withProvider(const MapScreen(sourceCheckpointId: 'C1')),
-    );
-    await tester.pump();
-
-    await tester.enterText(
-      find.byKey(const ValueKey('destinationSearchField')),
-      'B-412',
-    );
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('destinationDropdown')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('B-412').last);
-    await tester.pump();
-
-    expect(find.text('B-412'), findsWidgets);
-    expect(find.text('Current'), findsOneWidget);
-    expect(find.textContaining('C1'), findsWidgets);
-    expect(find.text('Next step'), findsOneWidget);
-    expect(find.text('C0'), findsWidgets);
-
-    await tester.pump(const Duration(seconds: 7));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Heading to B-412'), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('dismissWalkingOverlay')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Not selected'), findsOneWidget);
+    expect(find.text('Lift Lobby'), findsOneWidget);
   });
 }

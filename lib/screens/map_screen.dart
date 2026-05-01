@@ -4,19 +4,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/checkpoint_definitions.dart';
-import '../data/room_mapping_data.dart';
-import '../models/graph.dart';
-import '../models/room_mapping.dart';
+import '../indoor_nav.dart';
+import '../map_state.dart';
 import '../navigation_provider.dart';
-import '../utils/dijkstra.dart';
 import '../widgets/floor_map_painter.dart';
 import '../widgets/route_painter.dart';
 import '../widgets/walking_overlay.dart';
 import 'location_screen.dart';
 
-const double _floorPlanAspectRatio = 3484 / 649;
-const String _floorPlanAsset = 'assets/images/floorplan_marked.png';
+const double _floorPlanViewAspectRatio = 3.4;
+const String _floorPlanAsset = 'assets/images/final_floorplan.png';
 
 class MapScreen extends StatefulWidget {
   final String sourceCheckpointId;
@@ -46,7 +43,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     _dashController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..repeat();
+    )..repeat(reverse: true);
     _searchController = TextEditingController();
   }
 
@@ -61,13 +58,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void _selectDestination(String? roomId) {
     _routeTimer?.cancel();
+    context.read<NavigationProvider>().setDestination(roomId);
     setState(() {
       _selectedRoomId = roomId;
       _mapState = roomId == null ? MapState.idle : MapState.routing;
     });
 
     if (roomId != null) {
-      _routeTimer = Timer(const Duration(seconds: 7), () {
+      _routeTimer = Timer(const Duration(seconds: 25), () {
         if (!mounted || _selectedRoomId != roomId) return;
         setState(() => _mapState = MapState.walking);
       });
@@ -76,26 +74,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void _dismissOverlay() {
     _routeTimer?.cancel();
-    setState(() {
-      _selectedRoomId = null;
-      _mapState = MapState.idle;
-    });
+    setState(() => _mapState = MapState.routing);
   }
 
   @override
   Widget build(BuildContext context) {
-    final providerCheckpoint =
-        context.watch<NavigationProvider>().currentCheckpointId;
+    final provider = context.watch<NavigationProvider>();
+    final providerCheckpoint = provider.currentCheckpointId;
     final sourceCheckpointId = effectiveCheckpointId(
       providerCheckpoint,
       fallback: effectiveCheckpointId(widget.sourceCheckpointId),
     );
-    final selectedRoom =
-        _selectedRoomId == null ? null : kRoomMappings[_selectedRoomId!];
-    final routePath =
-        selectedRoom == null
-            ? const <String>[]
-            : findPath(sourceCheckpointId, selectedRoom.checkpointId);
+    final selectedRoom = provider.selectedRoomInfo;
+    final selectedRoomId = provider.destinationRoomId ?? _selectedRoomId;
+    final routePath = provider.currentPath;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Floor Map - 4th Floor')),
@@ -106,7 +98,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               _DestinationSelector(
                 query: _query,
                 controller: _searchController,
-                selectedRoomId: _selectedRoomId,
+                selectedRoomId: selectedRoomId,
+                availableRooms: provider.availableRooms,
                 onQueryChanged: (value) => setState(() => _query = value),
                 onSelected: _selectDestination,
                 onClear: () => _selectDestination(null),
@@ -116,7 +109,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                   child: _MapCanvas(
                     sourceCheckpointId: sourceCheckpointId,
-                    destinationCheckpointId: selectedRoom?.checkpointId,
+                    destinationCheckpointId: provider.destinationCheckpoint,
                     routePath: routePath,
                     mapState: _mapState,
                     nodeRingController: _nodeRingController,
@@ -128,13 +121,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 sourceCheckpointId: sourceCheckpointId,
                 selectedRoom: selectedRoom,
                 routePath: routePath,
+                checkpoint: provider.checkpointDefinitionFor(
+                  sourceCheckpointId,
+                ),
+                errorText: provider.lastError,
               ),
             ],
           ),
           WalkingOverlay(
             visible: _mapState == MapState.walking && selectedRoom != null,
             destinationName: selectedRoom?.displayName ?? '',
-            finalInstruction: selectedRoom?.finalInstruction ?? '',
+            finalInstruction: provider.finalRoomInstruction,
             onDismiss: _dismissOverlay,
           ),
         ],
@@ -147,6 +144,7 @@ class _DestinationSelector extends StatelessWidget {
   final String query;
   final TextEditingController controller;
   final String? selectedRoomId;
+  final List<String> availableRooms;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<String?> onSelected;
   final VoidCallback onClear;
@@ -155,6 +153,7 @@ class _DestinationSelector extends StatelessWidget {
     required this.query,
     required this.controller,
     required this.selectedRoomId,
+    required this.availableRooms,
     required this.onQueryChanged,
     required this.onSelected,
     required this.onClear,
@@ -162,8 +161,8 @@ class _DestinationSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final normalizedQuery = query.trim().toUpperCase();
-    final rooms = kRoomMappings.keys.toList()..sort();
+    final normalizedQuery = normalizeRoomLabel(query);
+    final rooms = availableRooms.toList()..sort();
     final visibleRooms =
         rooms
             .where(
@@ -252,7 +251,7 @@ class _DestinationSelector extends StatelessWidget {
   }
 }
 
-class _MapCanvas extends StatelessWidget {
+class _MapCanvas extends StatefulWidget {
   final String sourceCheckpointId;
   final String? destinationCheckpointId;
   final List<String> routePath;
@@ -270,14 +269,30 @@ class _MapCanvas extends StatelessWidget {
   });
 
   @override
+  State<_MapCanvas> createState() => _MapCanvasState();
+}
+
+class _MapCanvasState extends State<_MapCanvas> {
+  final TransformationController _transformationController =
+      TransformationController();
+  Size? _lastViewportSize;
+  Size? _lastCanvasSize;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final canvasHeight = math.max(360.0, constraints.maxHeight);
-        final canvasWidth = math.max(
-          constraints.maxWidth,
-          canvasHeight * _floorPlanAspectRatio,
-        );
+        final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final canvasHeight = math.max(520.0, constraints.maxHeight);
+        final canvasWidth = canvasHeight * _floorPlanViewAspectRatio;
+        final canvasSize = Size(canvasWidth, canvasHeight);
+        _centerMapWhenSizeChanges(viewportSize, canvasSize);
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
@@ -286,46 +301,47 @@ class _MapCanvas extends StatelessWidget {
             child: InteractiveViewer(
               minScale: 0.75,
               maxScale: 2.8,
+              constrained: false,
+              transformationController: _transformationController,
               boundaryMargin: const EdgeInsets.all(80),
-              child: Center(
-                child: SizedBox(
-                  width: canvasWidth,
-                  height: canvasHeight,
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      nodeRingController,
-                      dashController,
-                    ]),
-                    builder: (context, _) {
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(
-                            _floorPlanAsset,
-                            fit: BoxFit.fill,
-                            filterQuality: FilterQuality.medium,
-                          ),
-                          if (routePath.length > 1 &&
-                              mapState == MapState.routing)
-                            CustomPaint(
-                              painter: RoutePainter(
-                                routePath: routePath,
-                                dashOffset: dashController.value * 20,
-                              ),
-                            ),
+              child: SizedBox(
+                width: canvasWidth,
+                height: canvasHeight,
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([
+                    widget.nodeRingController,
+                    widget.dashController,
+                  ]),
+                  builder: (context, _) {
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          _floorPlanAsset,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                        ),
+                        if (widget.routePath.length > 1 &&
+                            widget.mapState == MapState.routing)
                           CustomPaint(
-                            painter: FloorMapPainter(
-                              sourceCheckpointId: sourceCheckpointId,
-                              destinationCheckpointId: destinationCheckpointId,
-                              routePath: routePath,
-                              mapState: mapState,
-                              pulseValue: nodeRingController.value,
+                            painter: RoutePainter(
+                              routePath: widget.routePath,
+                              animationValue: widget.dashController.value,
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  ),
+                        CustomPaint(
+                          painter: FloorMapPainter(
+                            sourceCheckpointId: widget.sourceCheckpointId,
+                            destinationCheckpointId:
+                                widget.destinationCheckpointId,
+                            routePath: widget.routePath,
+                            mapState: widget.mapState,
+                            pulseValue: widget.nodeRingController.value,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -334,26 +350,45 @@ class _MapCanvas extends StatelessWidget {
       },
     );
   }
+
+  void _centerMapWhenSizeChanges(Size viewportSize, Size canvasSize) {
+    if (_lastViewportSize == viewportSize && _lastCanvasSize == canvasSize) {
+      return;
+    }
+    _lastViewportSize = viewportSize;
+    _lastCanvasSize = canvasSize;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final dx = math.min(0.0, (viewportSize.width - canvasSize.width) / 2);
+      final dy = math.min(0.0, (viewportSize.height - canvasSize.height) / 2);
+      _transformationController.value = Matrix4.identity()..translate(dx, dy);
+    });
+  }
 }
 
 class _NavigationStatusPanel extends StatelessWidget {
   final String sourceCheckpointId;
-  final RoomMapping? selectedRoom;
+  final RoomInfo? selectedRoom;
   final List<String> routePath;
+  final CheckpointDefinition? checkpoint;
+  final String? errorText;
 
   const _NavigationStatusPanel({
     required this.sourceCheckpointId,
     required this.selectedRoom,
     required this.routePath,
+    required this.checkpoint,
+    required this.errorText,
   });
 
   @override
   Widget build(BuildContext context) {
-    final checkpoint = kCheckpointsById[sourceCheckpointId];
+    final currentCheckpoint = checkpoint;
     final currentText =
-        checkpoint == null
+        currentCheckpoint == null
             ? sourceCheckpointId
-            : '$sourceCheckpointId - ${checkpoint.name}';
+            : '$sourceCheckpointId - ${currentCheckpoint.name}';
     final nextStep = routePath.length > 1 ? routePath[1] : '-';
 
     return Card(
@@ -379,6 +414,13 @@ class _NavigationStatusPanel extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             _StatusRow(label: 'Next step', value: nextStep),
+            if (errorText != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                errorText!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
           ],
         ),
       ),

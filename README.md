@@ -1,6 +1,14 @@
-# localization
+# MapMyFloor
 
-A new Flutter project.
+Indoor navigation Flutter app for Android using local Wi-Fi fingerprinting.
+
+## Project Structure
+
+- `lib/indoor_nav/` contains the UI-independent localization, smoothing, routing, and room-instruction backend.
+- `assets/indoor_nav/` contains the bundled checkpoint graph, room mapping, and production fingerprint CSV.
+- `tools/process_wifi_scans.py` regenerates fingerprint CSVs from `data/raw_scans/`.
+- `data/processed/` contains local processing outputs used to refresh bundled assets.
+- `assets/images/` contains floor-plan artwork used by the UI.
 
 ## Getting Started
 

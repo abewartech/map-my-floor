@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/checkpoint_definitions.dart';
+import '../indoor_nav.dart';
 import '../navigation_provider.dart';
 import 'map_screen.dart';
 
 const String kDemoFallbackCheckpointId = 'C1';
+
+const CheckpointDefinition _fallbackCheckpoint = CheckpointDefinition(
+  id: 'C1',
+  name: 'LiftLobby',
+  wing: 'Core',
+  description: 'Lift lobby checkpoint connected to the central core.',
+  coveredRooms: [],
+);
 
 String effectiveCheckpointId(
   String checkpointId, {
@@ -46,12 +54,13 @@ class _LocationScreenState extends State<LocationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final providerCheckpoint =
-        context.watch<NavigationProvider>().currentCheckpointId;
+    final provider = context.watch<NavigationProvider>();
+    final providerCheckpoint = provider.currentCheckpointId;
     final checkpointId = effectiveCheckpointId(providerCheckpoint);
     final checkpoint =
-        kCheckpointsById[checkpointId] ??
-        kCheckpointsById[kDemoFallbackCheckpointId]!;
+        provider.checkpointDefinitionFor(checkpointId) ??
+        provider.checkpointDefinitionFor(kDemoFallbackCheckpointId) ??
+        _fallbackCheckpoint;
 
     if (checkpointId != _lastCheckpointId) {
       _lastCheckpointId = checkpointId;
@@ -147,18 +156,56 @@ class _LocationScreenState extends State<LocationScreen>
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            checkpoint.instructionSummary,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyLarge?.copyWith(
-                              color: Colors.blueGrey.shade700,
-                              height: 1.35,
+                          const SizedBox(height: 20),
+                          if (checkpoint.leftRoom != null ||
+                              checkpoint.middleRoom != null ||
+                              checkpoint.rightRoom != null) ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (checkpoint.leftRoom != null)
+                                  _RoomPositionInfo(
+                                    label: 'LEFT',
+                                    room: checkpoint.leftRoom!,
+                                  ),
+                                if (checkpoint.middleRoom != null)
+                                  _RoomPositionInfo(
+                                    label: 'MIDDLE',
+                                    room: checkpoint.middleRoom!,
+                                  ),
+                                if (checkpoint.rightRoom != null)
+                                  _RoomPositionInfo(
+                                    label: 'RIGHT',
+                                    room: checkpoint.rightRoom!,
+                                  ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 24),
+                            const SizedBox(height: 16),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 14,
+                                  color: Colors.blueGrey.shade300,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Positions assume you are facing the middle room',
+                                    softWrap: true,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.copyWith(
+                                      color: Colors.blueGrey.shade500,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                          ],
                           _InfoRow(label: 'Wing', value: checkpoint.wing),
                           const SizedBox(height: 10),
                           _InfoRow(
@@ -181,11 +228,29 @@ class _LocationScreenState extends State<LocationScreen>
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.access_time, size: 20),
-                          const SizedBox(width: 10),
-                          Text('Last updated: $timeLabel'),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time, size: 20),
+                              const SizedBox(width: 10),
+                              Text('Last updated: $timeLabel'),
+                            ],
+                          ),
+                          if (provider.lastError != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              provider.lastError!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                          if (!provider.isReady) ...[
+                            const SizedBox(height: 10),
+                            const LinearProgressIndicator(),
+                          ],
                         ],
                       ),
                     ),
@@ -240,6 +305,42 @@ class _InfoRow extends StatelessWidget {
           child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
         ),
       ],
+    );
+  }
+}
+
+class _RoomPositionInfo extends StatelessWidget {
+  final String label;
+  final String room;
+
+  const _RoomPositionInfo({required this.label, required this.room});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.blueGrey.shade400,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            room,
+            textAlign: TextAlign.center,
+            softWrap: true,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

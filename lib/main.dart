@@ -7,7 +7,11 @@ import 'screens/location_screen.dart';
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (_) => NavigationProvider(),
+      create: (_) {
+        final provider = NavigationProvider();
+        provider.initialize();
+        return provider;
+      },
       child: const IndoorNavApp(),
     ),
   );
@@ -19,7 +23,7 @@ class IndoorNavApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'IIIT Delhi Navigation',
+      title: 'MapMyFloor',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

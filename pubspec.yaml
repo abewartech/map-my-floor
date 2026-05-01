@@ -1,5 +1,5 @@
-name: localization
-description: "Indoor Room Navigation Android App using Wi-Fi Fingerprinting."
+name: map_my_floor
+description: "MapMyFloor indoor room navigation app using Wi-Fi fingerprinting."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -11,7 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  lottie: ^3.1.0
   wifi_scan: ^0.4.0+1
   permission_handler: ^11.3.1
   provider: ^6.1.2
@@ -25,5 +24,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/final_floorplan.png
     - assets/images/floorplan_marked.png
     - assets/images/
+    - assets/indoor_nav/CheckpointLevelFingerprints.csv
+    - assets/indoor_nav/RunLevelFingerprints.csv
+    - assets/indoor_nav/FilteredScanVectors.csv
+    - assets/indoor_nav/ScanQualitySummary.csv
+    - assets/indoor_nav/FeatureRules.json
+    - assets/indoor_nav/CheckpointGraph.json
+    - assets/indoor_nav/CheckpointDefinitions.json
+    - assets/indoor_nav/RoomMapping.json

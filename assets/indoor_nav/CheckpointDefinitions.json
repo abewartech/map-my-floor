@@ -1,0 +1,152 @@
+{
+  "checkpoints": [
+    {
+      "id": "C0",
+      "name": "Central Core",
+      "wing": "Core",
+      "description": "Central core checkpoint near A-419, A-420, and B-419",
+      "coveredRooms": ["A-419", "A-420", "B-419"]
+    },
+    {
+      "id": "C1",
+      "name": "Lift Lobby",
+      "wing": "Core",
+      "description": "Lift lobby checkpoint connected to the central core",
+      "coveredRooms": []
+    },
+    {
+      "id": "A1",
+      "name": "A-401 to A-403",
+      "wing": "A",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["A-401", "A-402", "A-403"],
+      "leftRoom": "A-401",
+      "middleRoom": "A-402",
+      "rightRoom": "A-403"
+    },
+    {
+      "id": "A2",
+      "name": "A-404 to A-406",
+      "wing": "A",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["A-404", "A-405", "A-406"],
+      "leftRoom": "A-404",
+      "middleRoom": "A-405",
+      "rightRoom": "A-406"
+    },
+    {
+      "id": "A3",
+      "name": "A-407 to A-409",
+      "wing": "A",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["A-407", "A-408", "A-409"],
+      "leftRoom": "A-407",
+      "middleRoom": "A-408",
+      "rightRoom": "A-409"
+    },
+    {
+      "id": "A4",
+      "name": "A-410 to A-412",
+      "wing": "A",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["A-410", "A-411", "A-412"],
+      "leftRoom": "A-410",
+      "middleRoom": "A-411",
+      "rightRoom": "A-412"
+    },
+    {
+      "id": "A5",
+      "name": "A End-Services",
+      "wing": "A",
+      "description": "end services, staircase, and toilet-side checkpoint",
+      "coveredRooms": []
+    },
+    {
+      "id": "A6",
+      "name": "A-413 to A-415",
+      "wing": "A",
+      "description": "lab/common-room side checkpoint",
+      "coveredRooms": ["A-413", "A-414", "A-415"],
+      "leftRoom": "A-413",
+      "middleRoom": "A-414",
+      "rightRoom": "A-415"
+    },
+    {
+      "id": "A7",
+      "name": "A-416 to A-418",
+      "wing": "A",
+      "description": "lab/common-room side checkpoint",
+      "coveredRooms": ["A-416", "A-417", "A-418"],
+      "leftRoom": "A-416",
+      "middleRoom": "A-417",
+      "rightRoom": "A-418"
+    },
+    {
+      "id": "B1",
+      "name": "B-401 to B-403",
+      "wing": "B",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["B-401", "B-402", "B-403"],
+      "leftRoom": "B-403",
+      "middleRoom": "B-402",
+      "rightRoom": "B-401"
+    },
+    {
+      "id": "B2",
+      "name": "B-404 to B-406",
+      "wing": "B",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["B-404", "B-405", "B-406"],
+      "leftRoom": "B-406",
+      "middleRoom": "B-405",
+      "rightRoom": "B-404"
+    },
+    {
+      "id": "B3",
+      "name": "B-407 to B-409",
+      "wing": "B",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["B-407", "B-408", "B-409"],
+      "leftRoom": "B-409",
+      "middleRoom": "B-408",
+      "rightRoom": "B-407"
+    },
+    {
+      "id": "B4",
+      "name": "B-410 to B-412",
+      "wing": "B",
+      "description": "faculty-room side checkpoint",
+      "coveredRooms": ["B-410", "B-411", "B-412"],
+      "leftRoom": "B-412",
+      "middleRoom": "B-411",
+      "rightRoom": "B-410"
+    },
+    {
+      "id": "B5",
+      "name": "B End-Services",
+      "wing": "B",
+      "description": "end services, staircase, and toilet-side checkpoint",
+      "coveredRooms": []
+    },
+    {
+      "id": "B6",
+      "name": "B-413 to B-415",
+      "wing": "B",
+      "description": "lab/common-room side checkpoint",
+      "coveredRooms": ["B-413", "B-414", "B-415"],
+      "leftRoom": "B-415",
+      "middleRoom": "B-414",
+      "rightRoom": "B-413"
+    },
+    {
+      "id": "B7",
+      "name": "B-416 to B-418",
+      "wing": "B",
+      "description": "lab/common-room side checkpoint",
+      "coveredRooms": ["B-416", "B-417", "B-418"],
+      "leftRoom": "B-418",
+      "middleRoom": "B-417",
+      "rightRoom": "B-416"
+    }
+  ]
+}

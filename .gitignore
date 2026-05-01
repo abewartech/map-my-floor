@@ -33,6 +33,15 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Local scan datasets and generated analysis outputs are kept out of app commits.
+data/raw_scans/
+data/processed/RawScans.csv
+data/processed/FilteredScanVectors.csv
+data/processed/RunLevelFingerprints.csv
+data/processed/CheckpointLevelFingerprints.csv
+data/processed/ScanQualitySummary.csv
+data/processed/SkippedFiles.csv
+
 # Symbolication related
 app.*.symbols
 

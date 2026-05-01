@@ -1,0 +1,11 @@
+flutter:
+  assets:
+    - assets/indoor_nav/CheckpointLevelFingerprints.csv
+    - assets/indoor_nav/RunLevelFingerprints.csv
+    - assets/indoor_nav/FilteredScanVectors.csv
+    - assets/indoor_nav/ScanQualitySummary.csv
+    - assets/indoor_nav/FeatureRules.json
+    - assets/indoor_nav/CheckpointGraph.json
+    - assets/indoor_nav/CheckpointDefinitions.json
+    - assets/indoor_nav/RoomMapping.json
+    # Add FloorMap.png separately when the frontend asset is ready.
