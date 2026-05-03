@@ -78,15 +78,34 @@ class CheckpointDefinition {
   });
 }
 
+/// A single neighbour returned by kNN, used for the debug overlay.
+class KnnNeighbor {
+  final String checkpointId;
+  final double distance;
+  final double weight;
+  final bool isOutlier;
+
+  const KnnNeighbor({
+    required this.checkpointId,
+    required this.distance,
+    required this.weight,
+    required this.isOutlier,
+  });
+}
+
 class PredictionResult {
   final String checkpointId;
   final double distance;
   final double confidence;
 
+  /// Non-empty only when predictWeightedKnn is used.
+  final List<KnnNeighbor> knnNeighbors;
+
   const PredictionResult({
     required this.checkpointId,
     required this.distance,
     required this.confidence,
+    this.knnNeighbors = const [],
   });
 }
 

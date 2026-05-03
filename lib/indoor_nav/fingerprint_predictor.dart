@@ -35,7 +35,22 @@ class FingerprintPredictor {
     );
   }
 
-  PredictionResult predictWeightedKnn(Map<String, int> liveVector, {int k = 3}) {
+  /// Weighted kNN with outlier rejection via IQR / z-score gate.
+  ///
+  /// Algorithm:
+  ///   1. Rank all fingerprints by RSSI distance, drop infinite distances.
+  ///   2. Take the top [k] candidates.
+  ///   3. Compute mean & std-dev of those [k] distances.
+  ///   4. Flag any candidate as an outlier when its distance exceeds
+  ///      mean + [outlierSigma] × std-dev (and std-dev is non-trivial).
+  ///   5. Outliers contribute a tiny sentinel weight (1e-9) so they appear
+  ///      in the debug overlay but do not meaningfully affect voting.
+  ///   6. Confidence = winner-vote-share among non-outlier weights.
+  PredictionResult predictWeightedKnn(
+    Map<String, int> liveVector, {
+    int k = 3,
+    double outlierSigma = 1.5,
+  }) {
     if (fingerprints.isEmpty) {
       throw StateError('No fingerprints loaded.');
     }
@@ -54,20 +69,63 @@ class FingerprintPredictor {
       );
     }
 
-    // Check for exact match (distance 0)
+    // Exact match short-circuit.
     if (ranked.first.value == 0) {
       return PredictionResult(
         checkpointId: ranked.first.key.checkpointId,
         distance: 0,
         confidence: 1.0,
+        knnNeighbors: [
+          KnnNeighbor(
+            checkpointId: ranked.first.key.checkpointId,
+            distance: 0,
+            weight: 1.0,
+            isOutlier: false,
+          ),
+        ],
       );
     }
 
+    final topK = ranked.take(k).toList();
+
+    // ── Outlier detection ─────────────────────────────────────────────────
+    final distances = topK.map((e) => e.value).toList();
+    final mean = distances.fold(0.0, (a, b) => a + b) / distances.length;
+    final variance =
+        distances.map((d) => (d - mean) * (d - mean)).fold(0.0, (a, b) => a + b) /
+            distances.length;
+    final std = sqrt(variance);
+    final outlierThreshold =
+        (std > 1e-6) ? mean + outlierSigma * std : double.infinity;
+
+    // ── Vote accumulation ─────────────────────────────────────────────────
     final votes = <String, double>{};
-    for (final item in ranked.take(k)) {
-      final weight = 1.0 / max(item.value, 1e-6);
-      votes[item.key.checkpointId] =
-          (votes[item.key.checkpointId] ?? 0.0) + weight;
+    final neighbors = <KnnNeighbor>[];
+
+    for (final item in topK) {
+      final isOutlier = item.value > outlierThreshold;
+      final effectiveWeight =
+          isOutlier ? 1e-9 : 1.0 / max(item.value, 1e-6);
+
+      if (!isOutlier) {
+        votes[item.key.checkpointId] =
+            (votes[item.key.checkpointId] ?? 0.0) + effectiveWeight;
+      }
+
+      neighbors.add(KnnNeighbor(
+        checkpointId: item.key.checkpointId,
+        distance: item.value,
+        weight: effectiveWeight,
+        isOutlier: isOutlier,
+      ));
+    }
+
+    // Fallback: if everything got rejected as outlier, use raw nearest.
+    if (votes.isEmpty) {
+      for (final nb in neighbors) {
+        final w = 1.0 / max(nb.distance, 1e-6);
+        votes[nb.checkpointId] = (votes[nb.checkpointId] ?? 0.0) + w;
+      }
     }
 
     final sortedVotes =
@@ -82,6 +140,7 @@ class FingerprintPredictor {
       checkpointId: bestLabel,
       distance: bestDistance,
       confidence: confidence,
+      knnNeighbors: neighbors,
     );
   }
 
@@ -100,13 +159,12 @@ class FingerprintPredictor {
       final storedMissing = storedValue <= missingRssi;
 
       if (liveMissing && storedMissing) {
-        // Very important:
-        // Do not reward two missing values as a similarity.
+        // Do not reward two missing values as similarity.
         continue;
       }
 
       if (liveMissing || storedMissing) {
-        // Penalize one-sided missing values.
+        // Penalize one-sided missing.
         sum += missingPenalty * missingPenalty;
         continue;
       }

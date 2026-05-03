@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../indoor_nav.dart';
 import '../navigation_provider.dart';
+import '../widgets/debug_overlay.dart';
 import 'map_screen.dart';
 
 const String kDemoFallbackCheckpointId = 'C1';
@@ -85,14 +86,16 @@ class _LocationScreenState extends State<LocationScreen>
         ),
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+        child: Stack(
+          children: [
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -270,10 +273,14 @@ class _LocationScreenState extends State<LocationScreen>
                     icon: const Icon(Icons.route),
                     label: const Text('Navigate to a Room'),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+            // Floating debug overlay (FAB + panel)
+            const DebugOverlay(),
+          ],
         ),
       ),
     );

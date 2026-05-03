@@ -12,10 +12,18 @@ class IndoorNavPrediction {
   final PredictionResult rawPrediction;
   final String stableCheckpointId;
 
+  /// Current smoother candidate (the checkpoint being accumulated toward).
+  final String? smootherCandidate;
+
+  /// How many consecutive hits the candidate has accumulated.
+  final int smootherCandidateCount;
+
   const IndoorNavPrediction({
     required this.featureVector,
     required this.rawPrediction,
     required this.stableCheckpointId,
+    this.smootherCandidate,
+    this.smootherCandidateCount = 0,
   });
 }
 
@@ -172,6 +180,8 @@ class IndoorNavEngine {
       featureVector: vector,
       rawPrediction: raw,
       stableCheckpointId: stable,
+      smootherCandidate: smoother.candidateDebugLabel,
+      smootherCandidateCount: smoother.candidateDebugCount,
     );
   }
 

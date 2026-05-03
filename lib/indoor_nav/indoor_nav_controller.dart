@@ -44,6 +44,15 @@ class IndoorNavController extends ChangeNotifier {
   List<String> availableRooms = const [];
   List<String> availableCheckpoints = const [];
 
+  /// kNN neighbours from the most recent weighted-kNN prediction.
+  List<KnnNeighbor> knnNeighbors = const [];
+
+  /// Current smoother candidate checkpoint (or null when stable matches raw).
+  String? smootherCandidate;
+
+  /// Consecutive-hit count for the current smoother candidate.
+  int smootherCandidateCount = 0;
+
   IndoorNavController({
     this.useWeightedKnn = true,
     this.knnK = 3,
@@ -113,6 +122,9 @@ class IndoorNavController extends ChangeNotifier {
     rawPredictedCheckpoint = prediction.rawPrediction.checkpointId;
     stableCheckpoint = prediction.stableCheckpointId;
     predictionConfidence = prediction.rawPrediction.confidence;
+    knnNeighbors = prediction.rawPrediction.knnNeighbors;
+    smootherCandidate = prediction.smootherCandidate;
+    smootherCandidateCount = prediction.smootherCandidateCount;
     _recomputeRouteIfPossible();
 
     _log(

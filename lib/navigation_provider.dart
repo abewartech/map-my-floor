@@ -63,6 +63,12 @@ class NavigationProvider extends ChangeNotifier {
   List<String> get availableCheckpoints =>
       _indoorNavController.availableCheckpoints;
 
+  // ── Debug / overlay data ──────────────────────────────────────────────
+  List<KnnNeighbor> get knnNeighbors => _indoorNavController.knnNeighbors;
+  String? get smootherCandidate => _indoorNavController.smootherCandidate;
+  int get smootherCandidateCount => _indoorNavController.smootherCandidateCount;
+  int get requiredConsecutive => _indoorNavController.requiredConsecutive;
+
   RoomInfo? get selectedRoomInfo {
     final room = destinationRoomId;
     if (room == null) return null;
