@@ -362,7 +362,8 @@ class _MapCanvasState extends State<_MapCanvas> {
       if (!mounted) return;
       final dx = math.min(0.0, (viewportSize.width - canvasSize.width) / 2);
       final dy = math.min(0.0, (viewportSize.height - canvasSize.height) / 2);
-      _transformationController.value = Matrix4.identity()..translate(dx, dy);
+      _transformationController.value = Matrix4.identity()
+        ..translateByDouble(dx, dy, 0.0, 1.0);
     });
   }
 }
