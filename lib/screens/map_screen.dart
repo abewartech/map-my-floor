@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../indoor_nav.dart';
 import '../map_state.dart';
 import '../navigation_provider.dart';
+import '../widgets/debug_overlay.dart';
 import '../widgets/floor_map_painter.dart';
 import '../widgets/route_painter.dart';
 import '../widgets/walking_overlay.dart';
@@ -134,6 +135,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             finalInstruction: provider.finalRoomInstruction,
             onDismiss: _dismissOverlay,
           ),
+          // Floating debug overlay
+          const DebugOverlay(),
         ],
       ),
     );
